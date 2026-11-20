@@ -90,5 +90,5 @@ begin
     Result := 'VB-CABLE is not installed yet. If its setup asked for a restart, restart Windows and open this installer again.';
     Exit;
   end;
-  MsgBox('VB-CABLE is installed. Restart Windows when you are ready. Before setting up Discord, check that your real microphone and headphones are still the Windows defaults.', mbInformation, MB_OK);
+  MsgBox('VB-CABLE is installed. Restart Windows when you are ready. Before setting up your call apps, check that your regular microphone and headphones are still the Windows defaults.', mbInformation, MB_OK);
 end;

@@ -148,8 +148,7 @@ internal sealed class TrayApp : ApplicationContext
         }
 
         status.Text = label;
-        if (openSettings is not null)
-            openSettings.RouteStatus = label;
+        openSettings?.UpdateRouteStatus(label);
         string tooltip = "Stop Yapping · " + label;
         tray.Text = tooltip[..Math.Min(63, tooltip.Length)];
     }
@@ -249,9 +248,9 @@ internal sealed class TrayApp : ApplicationContext
             var inputs = AudioRoute.List(DataFlow.Capture).Where(endpoint => !AudioRoute.IsCable(endpoint)).ToArray();
             using var form = new SettingsWindow(inputs, GetInput(inputs), preferences.DelayMs, AudioRoute.FindCable() is not null)
             {
-                Icon = appIcon,
-                RouteStatus = status.Text
+                Icon = appIcon
             };
+            form.UpdateRouteStatus(status.Text);
             openSettings = form;
             if (form.ShowDialog() != DialogResult.OK)
                 return;

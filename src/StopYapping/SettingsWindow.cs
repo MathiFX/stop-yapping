@@ -53,7 +53,7 @@ internal sealed class SettingsWindow : Form
 
     public AudioEndpoint? Microphone => microphones.SelectedItem as AudioEndpoint;
     public int DelayMs => (int)milliseconds.Value;
-    public string RouteStatus { set => routeStatus.Text = value; }
+    internal void UpdateRouteStatus(string? value) => routeStatus.Text = value;
 
     private static Label Caption(string value) => new()
     {

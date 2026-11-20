@@ -33,8 +33,9 @@ if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notm
 }
 $driverHash = (Get-FileHash -LiteralPath $driverExecutable -Algorithm SHA256).Hash
 
-$msix = & (Join-Path $PSScriptRoot 'Build-Msix.ps1') -Dotnet $Dotnet -Version "$Version.0" |
-    Select-Object -Last 1
+$msix = & (Join-Path $PSScriptRoot 'Build-Msix.ps1') -Dotnet $Dotnet -Version "$Version.0" | ForEach-Object {
+    if ($_ -is [System.IO.FileInfo]) { $_ } else { Write-Host $_ }
+}
 $app = Join-Path $work 'app'
 $toolAssets = Get-Content (Join-Path $PSScriptRoot 'obj\project.assets.json') -Raw | ConvertFrom-Json
 $nugetRoot = $toolAssets.packageFolders.PSObject.Properties.Name | Select-Object -First 1
