@@ -137,22 +137,21 @@ internal sealed class TrayApp : ApplicationContext
             StartRoute();
 
         string label;
-        Icon icon;
         lock (stateLock)
         {
-            (label, icon) = route is null ? (audioStatus, SystemIcons.Warning)
-                : preferences.Paused ? ("Automatic muting paused", appIcon)
-                : ShouldMute ? ("Dictating · Virtual mic muted", SystemIcons.Shield)
-                : vowen == VowenState.Unavailable ? ("Vowen unavailable · Mic live", SystemIcons.Information)
-                : ("Ready · Mic live", appIcon);
+            label = route is null ? audioStatus
+                : preferences.Paused ? "Automatic muting paused"
+                : ShouldMute ? "Dictating · Virtual mic muted"
+                : vowen == VowenState.Unavailable ? "Vowen unavailable · Mic live"
+                : "Ready · Mic live";
             pause.Text = preferences.Paused ? "Resume automatic muting" : "Pause automatic muting";
         }
 
         status.Text = label;
+        if (openSettings is not null)
+            openSettings.RouteStatus = label;
         string tooltip = "Stop Yapping · " + label;
         tray.Text = tooltip[..Math.Min(63, tooltip.Length)];
-        if (!ReferenceEquals(tray.Icon, icon))
-            tray.Icon = icon;
     }
 
     private void StartRoute()
@@ -191,11 +190,9 @@ internal sealed class TrayApp : ApplicationContext
         }
     }
 
-    private AudioEndpoint? GetInput(AudioEndpoint[] inputs)
-    {
-        string? id = preferences.MicrophoneId ?? AudioRoute.DefaultInputId();
-        return inputs.FirstOrDefault(device => device.Id == id);
-    }
+    private AudioEndpoint? GetInput(AudioEndpoint[] inputs) =>
+        AudioRoute.ChooseInput(inputs, preferences.MicrophoneId,
+            preferences.MicrophoneId is null ? AudioRoute.DefaultInputId() : null);
 
     private void RouteError(Exception error)
     {
@@ -252,7 +249,8 @@ internal sealed class TrayApp : ApplicationContext
             var inputs = AudioRoute.List(DataFlow.Capture).Where(endpoint => !AudioRoute.IsCable(endpoint)).ToArray();
             using var form = new SettingsWindow(inputs, GetInput(inputs), preferences.DelayMs, AudioRoute.FindCable() is not null)
             {
-                Icon = appIcon
+                Icon = appIcon,
+                RouteStatus = status.Text
             };
             openSettings = form;
             if (form.ShowDialog() != DialogResult.OK)

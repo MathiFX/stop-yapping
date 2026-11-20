@@ -111,6 +111,12 @@ internal sealed class AudioRoute : IDisposable
         return endpoint.ID;
     }
 
+    public static AudioEndpoint? ChooseInput(AudioEndpoint[] inputs, string? selectedId, string? defaultId)
+    {
+        AudioEndpoint? match = inputs.FirstOrDefault(device => device.Id == (selectedId ?? defaultId));
+        return match ?? (selectedId is null && inputs.Length == 1 ? inputs[0] : null);
+    }
+
     public AudioRoute(string inputId, string outputId, int delayMs, bool initiallyMuted)
     {
         using var devices = new MMDeviceEnumerator();

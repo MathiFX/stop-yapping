@@ -40,7 +40,15 @@ internal static class SelfTest
             using var monitor = new VowenMonitor(missingEndpoint);
             VowenState state = monitor.ReadAsync(CancellationToken.None).GetAwaiter().GetResult();
             Require(state == VowenState.Unavailable, "A missing Vowen endpoint must release the mute.");
-            Console.WriteLine("Audio buffer and Vowen disconnect tests passed.");
+
+            var usbMic = new AudioEndpoint("usb", "USB microphone");
+            var headset = new AudioEndpoint("headset", "Headset microphone");
+            Require(AudioRoute.ChooseInput([usbMic, headset], null, "headset") == headset, "The Windows default was ignored.");
+            Require(AudioRoute.ChooseInput([usbMic, headset], "usb", "headset") == usbMic, "The selected microphone was ignored.");
+            Require(AudioRoute.ChooseInput([usbMic], null, "cable") == usbMic, "The only available input was ignored.");
+            Require(AudioRoute.ChooseInput([usbMic, headset], null, "cable") is null, "An ambiguous source was selected.");
+            Require(AudioRoute.ChooseInput([headset], "usb", "headset") is null, "A disconnected source was silently switched.");
+            Console.WriteLine("Audio buffer, microphone selection and Vowen disconnect tests passed.");
             return 0;
         }
         catch (Exception error)

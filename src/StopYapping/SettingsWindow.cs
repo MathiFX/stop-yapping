@@ -6,6 +6,7 @@ internal sealed class SettingsWindow : Form
 {
     private readonly ComboBox microphones = new() { DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill };
     private readonly NumericUpDown milliseconds = new() { Minimum = 60, Maximum = 500, Increment = 10, Width = 100 };
+    private readonly Label routeStatus = Caption("");
 
     public SettingsWindow(AudioEndpoint[] inputs, AudioEndpoint? selected, int delayMs, bool cableInstalled)
     {
@@ -15,10 +16,11 @@ internal sealed class SettingsWindow : Form
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MinimizeBox = false;
         MaximizeBox = false;
-        ClientSize = new Size(480, 290);
+        ClientSize = new Size(480, 315);
 
-        var fields = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(20), RowCount = 8, ColumnCount = 1 };
+        var fields = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(20), RowCount = 9, ColumnCount = 1 };
         fields.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        fields.Controls.Add(routeStatus);
         fields.Controls.Add(Caption("Microphone for calls"));
         microphones.Items.AddRange(inputs);
         microphones.SelectedItem = selected;
@@ -28,8 +30,8 @@ internal sealed class SettingsWindow : Form
         fields.Controls.Add(milliseconds);
         fields.Controls.Add(Caption("Increase this if the start of your dictation slips through."));
         fields.Controls.Add(Caption(cableInstalled
-            ? "In Discord → Voice & Video, choose CABLE Output as the microphone."
-            : "Install VB-CABLE, then select CABLE Output in Discord."));
+            ? "Choose CABLE Output as the microphone in the call apps you want to mute."
+            : "Install VB-CABLE, then choose CABLE Output in your call apps."));
         if (!cableInstalled)
         {
             var link = new LinkLabel { Text = "Get VB-CABLE from the official website", AutoSize = true };
@@ -51,6 +53,7 @@ internal sealed class SettingsWindow : Form
 
     public AudioEndpoint? Microphone => microphones.SelectedItem as AudioEndpoint;
     public int DelayMs => (int)milliseconds.Value;
+    public string RouteStatus { set => routeStatus.Text = value; }
 
     private static Label Caption(string value) => new()
     {

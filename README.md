@@ -15,9 +15,10 @@ Download **StopYapping-Setup-x64.exe** from [Releases](../../releases). It inclu
 You’ll need a Windows 11 x64 PC and [Vowen](https://vowen.ai/) with its local CLI integration turned on.
 
 1. Open the installer and click **Install**. If you don’t already have VB-CABLE, setup will ask to install the included driver. That part needs an admin prompt and may need a restart.
-2. Open **Stop Yapping** from Start. In Discord → **Voice & Video**, pick **CABLE Output** as the microphone. Keep your real mic in Vowen and your real mic and headphones as the Windows defaults.
+2. Open **Stop Yapping** from Start. It uses your normal Windows microphone or lets you choose another in its settings.
+3. In the calling apps you want to mute, pick **CABLE Output** as the microphone. Keep your regular mic in Vowen and your headphones as the Windows default output.
 
-Want to use it in another call app? Pick **CABLE Output** as the mic there, too. Stop Yapping starts when you sign in, and you can pause it from its icon by the clock.
+Stop Yapping can start when you sign in. You can pause it from its icon by the clock. If Windows tucks it away, look under the tray arrow.
 
 ## 🛠️ Make it yours
 
@@ -27,7 +28,7 @@ Fork it, change it, share it or sell your own version. It's [MIT-licensed](LICEN
 
 - **Privacy** · Stop Yapping keeps your audio on your PC and sends no telemetry.
 - **Delay** · The app buffers 180 ms by default to help catch the start of your first word. You can change that from the tray.
-- **Uninstall** · Switch Discord back to your real mic, then remove Stop Yapping from **Windows Settings → Apps → Installed apps**. You can uninstall VB-CABLE separately if you no longer use it.
+- **Uninstall** · Switch your calling apps back to your regular mic, then remove Stop Yapping from **Windows Settings → Apps → Installed apps**. You can uninstall VB-CABLE separately if you no longer use it.
 - **Building it yourself** · See the [Windows packaging guide](packaging/README.md).
 
 **VB-CABLE** is made by [VB-Audio](https://vb-audio.com/Cable/) and is donationware. You can support them on their site.

@@ -4,4 +4,4 @@ This installer includes the original VB-CABLE driver by VB-Audio. If it is missi
 
 VB-CABLE is donationware. If you find it useful, you can support VB-Audio at https://vb-audio.com/Cable/.
 
-After setup, choose CABLE Output as the microphone in Discord and keep your real mic selected in Vowen.
+After setup, choose CABLE Output as the microphone in the calling apps you want to mute. Keep your regular microphone selected in Vowen.
