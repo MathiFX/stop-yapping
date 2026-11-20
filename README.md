@@ -22,7 +22,7 @@ Stop Yapping can start when you sign in. You can pause it from its icon by the c
 
 ## 🛠️ Make it yours
 
-Fork it, change it, share it or sell your own version. It's [MIT-licensed](LICENSE). Just keep the copyright and license notice with copies or substantial parts of the code you share.
+Want Vowen-aware muting in your own app? Take the parts you need, adapt them, and build them right into your project. The code is [MIT-licensed](LICENSE). Keep the copyright and license notice when you share copies or substantial parts of the code.
 
 ## A couple more things
 
