@@ -8,7 +8,7 @@ Stop Yapping mutes your call mic while you dictate with Vowen and brings it back
 
 ## 📦 Can I download it?
 
-The next Windows installer is pending signing and testing. The older unsigned preview is listed in [Releases](../../releases). The installer includes the audio driver in the same download.
+Download the [Windows 11 installer](../../releases/tag/v0.2.1). It includes the audio driver in the same download. This preview is unsigned, so Windows may display an unknown publisher warning.
 
 ## 🎧 Set it up
 
