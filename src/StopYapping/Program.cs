@@ -17,12 +17,16 @@ internal static class Program
         if (args.Contains("--self-test"))
             return SelfTest.Run();
         using var mutex = new Mutex(true, @"Local\StopYapping", out bool isFirst);
+        using var settingsRequested = new EventWaitHandle(false, EventResetMode.AutoReset, @"Local\StopYapping.Settings");
+        if (args.Contains("--settings"))
+            settingsRequested.Set();
         if (!isFirst)
             return 0;
 
+        Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
-        using var app = new TrayApp();
+        using var app = new TrayApp(settingsRequested);
         Application.Run(app);
         return 0;
     }
@@ -79,11 +83,12 @@ internal sealed class TrayApp : ApplicationContext
     private Preferences preferences = Preferences.Load();
     private VowenState vowen;
     private AudioRoute? route;
+    private SettingsWindow? openSettings;
     private string audioStatus = "Starting audio…";
     private long nextAttempt;
     private bool exiting;
 
-    public TrayApp()
+    public TrayApp(EventWaitHandle settingsRequested)
     {
         tray = new NotifyIcon
         {
@@ -100,7 +105,12 @@ internal sealed class TrayApp : ApplicationContext
         menu.Items.Add("Quit", null, (_, _) => ExitThread());
         tray.DoubleClick += (_, _) => ShowSettings();
         monitoring = Task.Run(() => monitor.RunAsync(UpdateVowen, stop.Token));
-        refresh.Tick += (_, _) => RefreshState();
+        refresh.Tick += (_, _) =>
+        {
+            RefreshState();
+            if (settingsRequested.WaitOne(0))
+                ShowSettings();
+        };
         refresh.Start();
         RefreshState();
     }
@@ -232,10 +242,19 @@ internal sealed class TrayApp : ApplicationContext
 
     private void ShowSettings()
     {
+        if (openSettings is not null)
+        {
+            openSettings.Activate();
+            return;
+        }
         try
         {
             var inputs = AudioRoute.List(DataFlow.Capture).Where(endpoint => !AudioRoute.IsCable(endpoint)).ToArray();
-            using var form = new SettingsWindow(inputs, GetInput(inputs), preferences.DelayMs, AudioRoute.FindCable() is not null);
+            using var form = new SettingsWindow(inputs, GetInput(inputs), preferences.DelayMs, AudioRoute.FindCable() is not null)
+            {
+                Icon = appIcon
+            };
+            openSettings = form;
             if (form.ShowDialog() != DialogResult.OK)
                 return;
 
@@ -247,6 +266,7 @@ internal sealed class TrayApp : ApplicationContext
             RefreshState();
         }
         catch (Exception error) { ShowError(error.Message); }
+        finally { openSettings = null; }
     }
 
     private void TrySave()

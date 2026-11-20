@@ -9,6 +9,7 @@ DisableProgramGroupPage=yes
 UninstallDisplayIcon={app}\StopYapping.exe
 UninstallDisplayName=Stop Yapping
 PrivilegesRequired=lowest
+SetupArchitecture=x64
 MinVersion=10.0.22000
 ArchitecturesAllowed=x64os
 ArchitecturesInstallIn64BitMode=x64os
@@ -19,7 +20,10 @@ OutputBaseFilename=StopYapping-Setup-x64
 WizardStyle=modern dynamic windows11
 DisableWelcomePage=no
 SetupIconFile=..\src\StopYapping\stop-yapping.ico
+WizardImageFile=Assets\wizard-light.png
+WizardImageFileDynamicDark=Assets\wizard-dark.png
 WizardSmallImageFile=Assets\stop-yapping.png
+WizardSmallImageFileDynamicDark=Assets\stop-yapping.png
 InfoBeforeFile=Setup-Notes.txt
 Compression=lzma2/fast
 SolidCompression=yes
@@ -32,14 +36,19 @@ Source: "{#DriverFolder}\*"; DestDir: "{tmp}\VB-CABLE"; Flags: dontcopy noencryp
 Source: "{#AppFolder}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\Stop Yapping"; Filename: "{app}\StopYapping.exe"
+Name: "{autoprograms}\Stop Yapping"; Filename: "{app}\StopYapping.exe"; Parameters: "--settings"
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "Stop Yapping"; ValueData: """{app}\StopYapping.exe"""; Tasks: startup; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: none; ValueName: "Stop Yapping"; Tasks: not startup; Flags: deletevalue
 
 [Run]
-Filename: "{app}\StopYapping.exe"; Description: "Open Stop Yapping"; Flags: postinstall nowait skipifsilent
+Filename: "{app}\StopYapping.exe"; Parameters: "--settings"; Description: "Open Stop Yapping settings"; Flags: postinstall nowait skipifsilent
+
+[Messages]
+WelcomeLabel1=Stop Yapping
+WelcomeLabel2=Silence your call mic while you dictate with Vowen.
+FinishedHeadingLabel=You're all set
 
 [UninstallDelete]
 Type: files; Name: "{localappdata}\StopYapping\settings.json"

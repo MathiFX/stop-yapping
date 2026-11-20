@@ -15,7 +15,6 @@ internal sealed class SettingsWindow : Form
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MinimizeBox = false;
         MaximizeBox = false;
-        ShowInTaskbar = false;
         ClientSize = new Size(480, 290);
 
         var fields = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(20), RowCount = 8, ColumnCount = 1 };
