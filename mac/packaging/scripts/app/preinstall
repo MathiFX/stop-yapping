@@ -1,0 +1,4 @@
+#!/bin/sh
+# Close a running copy so the new version can replace it.
+pkill -x StopYapping 2>/dev/null
+exit 0

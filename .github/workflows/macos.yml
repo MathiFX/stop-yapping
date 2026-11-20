@@ -1,0 +1,24 @@
+name: macOS package checks
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Build the app, driver and installer
+        run: ./mac/build.sh
+      - name: Check the installer contents
+        run: |
+          pkg=$(ls artifacts/StopYapping-*-macOS.pkg)
+          pkgutil --check-signature "$pkg" || true
+          pkgutil --payload-files "$pkg" | grep -q "Stop Yapping.app/Contents/MacOS/StopYapping"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: StopYapping-macOS
+          path: artifacts/StopYapping-*-macOS.pkg
+          if-no-files-found: error

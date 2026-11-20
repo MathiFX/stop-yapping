@@ -1,0 +1,12 @@
+#!/bin/sh
+# Reload Core Audio so Stop Yapping Mic appears without a restart.
+launchctl kickstart -k system/com.apple.audio.coreaudiod 2>/dev/null || killall coreaudiod 2>/dev/null
+sleep 2
+
+# Open the app for the signed-in user.
+user=$(stat -f%Su /dev/console)
+if [ -n "$user" ] && [ "$user" != "root" ] && [ -d "/Applications/Stop Yapping.app" ]; then
+  uid=$(id -u "$user")
+  launchctl asuser "$uid" sudo -u "$user" open "/Applications/Stop Yapping.app" 2>/dev/null
+fi
+exit 0

@@ -7,3 +7,5 @@
 *.msixbundle
 *.appinstaller
 *.log
+
+/mac/build/
