@@ -1,5 +1,6 @@
 using NAudio.CoreAudioApi;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using Windows.Storage;
 
@@ -33,12 +34,14 @@ internal sealed record Preferences(string? MicrophoneId = null, int DelayMs = 18
 
     private static string SettingsFolder()
     {
-        try { return ApplicationData.Current.LocalFolder.Path; }
-        catch (InvalidOperationException)
-        {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StopYapping");
-        }
+        uint length = 0;
+        return GetCurrentPackageFamilyName(ref length, IntPtr.Zero) == 122
+            ? ApplicationData.Current.LocalFolder.Path
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StopYapping");
     }
+
+    [DllImport("kernel32.dll", ExactSpelling = true)]
+    private static extern int GetCurrentPackageFamilyName(ref uint length, IntPtr familyName);
 
     public static Preferences Load()
     {
@@ -92,6 +95,7 @@ internal sealed class TrayApp : ApplicationContext
         menu.Items.Add(pause);
         menu.Items.Add("Settings…", null, (_, _) => ShowSettings());
         menu.Items.Add("Windows startup settings…", null, (_, _) => OpenStartupSettings());
+        menu.Items.Add("VB-CABLE by VB-Audio…", null, (_, _) => OpenLink("https://vb-audio.com/Cable/"));
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Quit", null, (_, _) => ExitThread());
         tray.DoubleClick += (_, _) => ShowSettings();
@@ -215,10 +219,13 @@ internal sealed class TrayApp : ApplicationContext
     }
 
     private static void OpenStartupSettings()
+        => OpenLink("ms-settings:startupapps");
+
+    private static void OpenLink(string destination)
     {
         try
         {
-            Process.Start(new ProcessStartInfo("ms-settings:startupapps") { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(destination) { UseShellExecute = true });
         }
         catch (Exception error) { ShowError(error.Message); }
     }

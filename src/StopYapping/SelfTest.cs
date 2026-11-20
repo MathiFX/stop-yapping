@@ -8,6 +8,7 @@ internal static class SelfTest
     {
         try
         {
+            _ = Preferences.Load();
             var format = new WaveFormat(8000, 16, 1);
             var gate = new DelayedMicrophone(format, 100, false);
             byte[] normal = Enumerable.Repeat((byte)12, 1600).ToArray();

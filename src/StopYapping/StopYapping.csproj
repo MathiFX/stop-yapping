@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>StopYapping</AssemblyName>
     <Product>Stop Yapping</Product>
-    <ApplicationIcon>app.ico</ApplicationIcon>
+    <ApplicationIcon>stop-yapping.ico</ApplicationIcon>
     <DebugType>none</DebugType>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>

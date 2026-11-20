@@ -1,5 +1,17 @@
 # Windows packaging
 
+## Build the EXE installer
+
+Install [Inno Setup 7](https://jrsoftware.org/inno-setup/downloads) and use the .NET 10 SDK on Windows. Run the command below with PowerShell 7. Pass the path to ISCC.exe if it is not on PATH.
+
+```powershell
+.\packaging\Build-Setup.ps1 -Iscc 'C:\path\to\ISCC.exe'
+```
+
+The build checks the pinned VB-CABLE archive and its publisher signature, then embeds the original driver package with the app. The resulting EXE under `artifacts/setup` is self-contained and installs without network access. Removing Stop Yapping preserves the shared VB-CABLE driver.
+
+## Build the MSIX package
+
 Build on Windows with the .NET 10 SDK. The script restores locked app dependencies and a pinned Microsoft Windows SDK Build Tools release. It publishes a self-contained x64 app, runs its audio buffer and disconnected-Vowen checks, then packages it with MakeAppx.
 
 ```powershell

@@ -1,0 +1,7 @@
+Stop Yapping makes your call mic go quiet while you dictate with Vowen.
+
+This installer includes the original VB-CABLE driver by VB-Audio. If it is missing, its installer will open and Windows will ask permission to install the driver. A restart may be needed.
+
+VB-CABLE is donationware. If you find it useful, you can support VB-Audio at https://vb-audio.com/Cable/.
+
+After setup, choose CABLE Output as the microphone in Discord and keep your real mic selected in Vowen.
