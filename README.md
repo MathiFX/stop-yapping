@@ -26,7 +26,6 @@ Fork it, change it, share it or sell your own version. It's [MIT-licensed](LICEN
 
 ## A couple more things
 
-- **Privacy** · Stop Yapping keeps your audio on your PC and sends no telemetry.
 - **Delay** · The app buffers 180 ms by default to help catch the start of your first word. You can change that from the tray.
 - **Uninstall** · Switch your calling apps back to your regular mic, then remove Stop Yapping from **Windows Settings → Apps → Installed apps**. You can uninstall VB-CABLE separately if you no longer use it.
 - **Building it yourself** · See the [Windows packaging guide](packaging/README.md).

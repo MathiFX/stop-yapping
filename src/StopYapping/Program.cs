@@ -74,6 +74,7 @@ internal sealed class TrayApp : ApplicationContext
     private readonly NotifyIcon tray;
     private readonly ContextMenuStrip menu = new();
     private readonly ToolStripMenuItem status = new() { Enabled = false };
+    private readonly ToolStripSeparator statusDivider = new();
     private readonly ToolStripMenuItem pause = new();
     private readonly Icon appIcon = Icon.ExtractAssociatedIcon(Environment.ProcessPath!) ?? (Icon)SystemIcons.Application.Clone();
     private readonly System.Windows.Forms.Timer refresh = new() { Interval = 150 };
@@ -95,7 +96,7 @@ internal sealed class TrayApp : ApplicationContext
             Icon = appIcon, Text = "Stop Yapping", Visible = true, ContextMenuStrip = menu
         };
         menu.Items.Add(status);
-        menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(statusDivider);
         pause.Click += (_, _) => TogglePause();
         menu.Items.Add(pause);
         menu.Items.Add("Settings…", null, (_, _) => ShowSettings());
@@ -141,15 +142,17 @@ internal sealed class TrayApp : ApplicationContext
         {
             label = route is null ? audioStatus
                 : preferences.Paused ? "Automatic muting paused"
-                : ShouldMute ? "Dictating · Virtual mic muted"
-                : vowen == VowenState.Unavailable ? "Vowen unavailable · Mic live"
-                : "Ready · Mic live";
+                : ShouldMute ? "Virtual mic muted while you dictate"
+                : vowen == VowenState.Unavailable ? "Vowen unavailable"
+                : "";
             pause.Text = preferences.Paused ? "Resume automatic muting" : "Pause automatic muting";
         }
 
         status.Text = label;
+        status.Visible = label.Length > 0;
+        statusDivider.Visible = label.Length > 0;
         openSettings?.UpdateRouteStatus(label);
-        string tooltip = "Stop Yapping · " + label;
+        string tooltip = label.Length == 0 ? "Stop Yapping" : "Stop Yapping · " + label;
         tray.Text = tooltip[..Math.Min(63, tooltip.Length)];
     }
 

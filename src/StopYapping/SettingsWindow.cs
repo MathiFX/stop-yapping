@@ -71,7 +71,11 @@ internal sealed class SettingsWindow : Form
 
     public AudioEndpoint? Microphone => microphones.SelectedItem as AudioEndpoint;
     public int DelayMs => (int)milliseconds.Value;
-    internal void UpdateRouteStatus(string? value) => routeStatus.Text = value;
+    internal void UpdateRouteStatus(string? value)
+    {
+        routeStatus.Text = value;
+        routeStatus.Visible = !string.IsNullOrEmpty(value);
+    }
 
     private static Label Caption(string value) => new()
     {
