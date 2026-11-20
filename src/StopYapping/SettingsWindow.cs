@@ -11,14 +11,24 @@ internal sealed class SettingsWindow : Form
     public SettingsWindow(AudioEndpoint[] inputs, AudioEndpoint? selected, int delayMs, bool cableInstalled)
     {
         Text = "Stop Yapping settings";
+        AutoScaleDimensions = new SizeF(96F, 96F);
         AutoScaleMode = AutoScaleMode.Dpi;
+        AutoSize = true;
+        AutoSizeMode = AutoSizeMode.GrowAndShrink;
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MinimizeBox = false;
         MaximizeBox = false;
-        ClientSize = new Size(480, 315);
+        MinimumSize = new Size(480, 0);
 
-        var fields = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(20), RowCount = 9, ColumnCount = 1 };
+        var fields = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Padding = new Padding(20),
+            ColumnCount = 1
+        };
         fields.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         fields.Controls.Add(routeStatus);
         fields.Controls.Add(Caption("Microphone for calls"));
@@ -39,7 +49,15 @@ internal sealed class SettingsWindow : Form
             fields.Controls.Add(link);
         }
 
-        var buttons = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft, AutoSize = true };
+        var buttons = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.RightToLeft,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            WrapContents = false,
+            Margin = new Padding(0, 10, 0, 0)
+        };
         var save = new Button { Text = "Save", DialogResult = DialogResult.OK, AutoSize = true, Enabled = Microphone is not null };
         var cancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, AutoSize = true };
         microphones.SelectedIndexChanged += (_, _) => save.Enabled = Microphone is not null;
@@ -57,6 +75,9 @@ internal sealed class SettingsWindow : Form
 
     private static Label Caption(string value) => new()
     {
-        Text = value, AutoSize = true, Margin = new Padding(3, 8, 3, 4)
+        Text = value,
+        AutoSize = true,
+        MaximumSize = new Size(420, 0),
+        Margin = new Padding(3, 8, 3, 4)
     };
 }
