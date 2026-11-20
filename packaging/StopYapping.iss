@@ -18,6 +18,11 @@ CloseApplications=no
 OutputDir={#OutputFolder}
 OutputBaseFilename=StopYapping-Setup-x64
 WizardStyle=modern dynamic windows11
+#ifdef SignRelease
+SignTool=release
+SignedUninstaller=yes
+SignedUninstallerDir={#SigningFolder}
+#endif
 DisableWelcomePage=no
 SetupIconFile=..\src\StopYapping\stop-yapping.ico
 WizardImageFile=Assets\wizard-light.png

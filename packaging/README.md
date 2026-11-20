@@ -10,6 +10,8 @@ Install [Inno Setup 7](https://jrsoftware.org/inno-setup/downloads) and use the 
 
 The build checks the pinned VB-CABLE archive and its publisher signature, then embeds the original driver package with the app. The resulting EXE under `artifacts/setup` is self-contained and installs without network access. Removing Stop Yapping preserves the shared VB-CABLE driver.
 
+Public EXE releases use a trusted Authenticode certificate. Pass its thumbprint from the current user's certificate store with `-SigningThumbprint` and your provider's HTTPS timestamp URL with `-TimestampServer`. The build signs the app, the setup and the embedded uninstaller, then verifies their signatures and timestamps. Keep test builds and certificates out of Releases.
+
 ## Build the MSIX package
 
 Build on Windows with the .NET 10 SDK. The script restores locked app dependencies and a pinned Microsoft Windows SDK Build Tools release. It publishes a self-contained x64 app, runs its audio buffer and disconnected-Vowen checks, then packages it with MakeAppx.

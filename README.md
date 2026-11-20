@@ -8,7 +8,7 @@ Stop Yapping mutes your call mic while you dictate with Vowen and brings it back
 
 ## 📦 Can I download it?
 
-Download **StopYapping-Setup-x64.exe** from [Releases](../../releases). It includes the audio driver, so one download is enough. This preview installer is unsigned, so Windows may show an unknown publisher warning or block it on some PCs.
+The next Windows installer is pending signing and testing. The older unsigned preview is listed in [Releases](../../releases). The installer includes the audio driver in the same download.
 
 ## 🎧 Set it up
 
