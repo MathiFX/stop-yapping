@@ -17,7 +17,7 @@ Stop Yapping reads Vowen’s local CLI endpoint from `~/Library/Application Supp
 It copies your real microphone into a hidden output-only device, *Stop Yapping Feed*, with a short delay to catch the first word.
 Whatever goes into the feed comes out of the visible, input-only **Stop Yapping Mic**. While Vowen records, the feed goes silent and the queued audio is thrown away.
 
-A gentle noise gate learns the background hiss level and lowers it by about 20 dB while you’re silent. You can turn it off from **Reduce background hiss** in the menu.
+By default the call mic is an exact copy of your microphone, so the noise suppression in Discord, Meet, FaceTime and other call apps works as designed. If you want, **Reduce background hiss** in the menu adds a gentle noise gate that learns the hiss level and lowers it by about 20 dB while you’re silent.
 
 ## Reliability and logs
 

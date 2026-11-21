@@ -16,7 +16,7 @@ struct Preferences {
         return Preferences(microphoneUID: store.string(forKey: "MicrophoneUID"),
                            delayMs: min(500, max(60, saved)),
                            paused: store.bool(forKey: "Paused"),
-                           reduceNoise: store.object(forKey: "ReduceNoise") as? Bool ?? true)
+                           reduceNoise: store.object(forKey: "ReduceNoise") as? Bool ?? false)
     }
 
     func save() {
