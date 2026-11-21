@@ -72,6 +72,49 @@ final class DelayedMicrophone: @unchecked Sendable {
     }
 }
 
+/// Downward expander that pushes steady background hiss down while you are silent.
+/// It learns the noise floor on its own and opens within a couple of milliseconds when you speak.
+final class NoiseGate {
+    private let sampleRate: Double
+    private let closedGain: Float = 0.1            // -20 dB while silent
+    private var noiseFloor: Float = 0.001          // running estimate of background RMS
+    private var gain: Float = 1
+    private var holdFrames = 0
+    private let attack: Float
+    private let release: Float
+    private let holdLength: Int
+
+    init(sampleRate: Double) {
+        self.sampleRate = sampleRate
+        attack = 1 - exp(-1 / Float(sampleRate * 0.002))
+        release = 1 - exp(-1 / Float(sampleRate * 0.12))
+        holdLength = Int(sampleRate * 0.25)
+    }
+
+    func process(_ samples: UnsafeMutablePointer<Float>, frames: Int) {
+        guard frames > 0 else { return }
+        var sum: Float = 0
+        for i in 0..<frames { sum += samples[i] * samples[i] }
+        let level = (sum / Float(frames)).squareRoot()
+
+        // The floor falls quickly to quiet blocks and creeps up slowly (about 1 dB/s),
+        // so speech never gets mistaken for background noise.
+        let seconds = Float(Double(frames) / sampleRate)
+        if level < noiseFloor { noiseFloor += (level - noiseFloor) * min(1, seconds * 20) }
+        else { noiseFloor *= 1 + 0.12 * seconds }
+        noiseFloor = min(max(noiseFloor, 0.00001), 0.05)
+
+        let threshold = max(noiseFloor * 3.2, 0.0003)   // about 10 dB above the floor
+        if level > threshold { holdFrames = holdLength } else { holdFrames = max(0, holdFrames - frames) }
+        let target: Float = holdFrames > 0 ? 1 : closedGain
+        let speed = target > gain ? attack : release
+        for i in 0..<frames {
+            gain += (target - gain) * speed
+            samples[i] *= gain
+        }
+    }
+}
+
 struct AudioEndpoint: Equatable {
     let id: AudioObjectID
     let uid: String
@@ -211,8 +254,9 @@ final class AudioRoute: @unchecked Sendable {
     private var resamplePosition: Double = 0   // fractional read position, relative to `lastSample`
     private var lastSample: Float = 0
     private var startedAt = Date()
+    private let gate: NoiseGate?
 
-    init(input: AudioEndpoint, delayMs: Int, initiallyMuted: Bool) throws {
+    init(input: AudioEndpoint, delayMs: Int, initiallyMuted: Bool, reduceNoise: Bool) throws {
         guard let feed = CoreAudio.device(uid: CoreAudio.virtualFeedUID) else {
             throw AudioRouteError("The Stop Yapping Mic driver is missing")
         }
@@ -229,6 +273,7 @@ final class AudioRoute: @unchecked Sendable {
         guard outputRate > 0 else { throw AudioRouteError("The Stop Yapping Mic driver is unavailable") }
 
         buffer = DelayedMicrophone(sampleRate: outputRate, delayMilliseconds: delayMs, initiallyBlocked: initiallyMuted)
+        gate = reduceNoise ? NoiseGate(sampleRate: inputRate) : nil
         inputScratch = .allocate(capacity: scratchFrames)
         resampled = .allocate(capacity: scratchFrames * 4)
         outputScratch = .allocate(capacity: scratchFrames)
@@ -308,6 +353,7 @@ final class AudioRoute: @unchecked Sendable {
             let scale = 1 / Float(totalChannels)
             for frame in 0..<frames { inputScratch[frame] *= scale }
         }
+        gate?.process(inputScratch, frames: frames)
 
         if inputRate == outputRate {
             buffer.write(inputScratch, frames: frames)

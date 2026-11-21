@@ -30,7 +30,7 @@ You’ll need macOS 13 Ventura or later (Apple silicon or Intel) and [Vowen](htt
 2. Stop Yapping opens in the menu bar. Click **Allow** when it asks for microphone access. It uses your Mac’s default microphone, or pick another from its **Microphone** menu.
 3. In the calling apps you want to mute, pick **Stop Yapping Mic** as the microphone. Keep your regular mic in Vowen.
 
-Turn on **Open at login** from the menu bar icon so it’s always ready. The icon shows a crossed-out mic while your call mic is muted.
+It opens at login and restarts on its own if it ever crashes. The icon shows a crossed-out mic while your call mic is muted. It also softens background hiss while you’re silent. You can turn that off from the menu.
 
 ## 🛠️ Make it yours
 

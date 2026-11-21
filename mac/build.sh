@@ -89,6 +89,8 @@ done
 lipo -create "$BUILD/StopYapping-arm64" "$BUILD/StopYapping-x86_64" -output "$APP/Contents/MacOS/StopYapping"
 sed "s/__VERSION__/$VERSION/g" "$MAC_DIR/Info.plist" > "$APP/Contents/Info.plist"
 cp "$BUILD/StopYapping.icns" "$APP/Contents/Resources/StopYapping.icns"
+mkdir -p "$APP/Contents/Library/LaunchAgents"
+cp "$MAC_DIR/packaging/com.stopyapping.app.agent.plist" "$APP/Contents/Library/LaunchAgents/"
 cp "$REPO_DIR/LICENSE" "$APP/Contents/Resources/LICENSE.txt"
 cp "$MAC_DIR/THIRD-PARTY-NOTICES.txt" "$APP/Contents/Resources/THIRD-PARTY-NOTICES.txt"
 codesign --force --options runtime --timestamp=none \

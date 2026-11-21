@@ -17,6 +17,14 @@ Stop Yapping reads Vowen’s local CLI endpoint from `~/Library/Application Supp
 It copies your real microphone into a hidden output-only device, *Stop Yapping Feed*, with a short delay to catch the first word.
 Whatever goes into the feed comes out of the visible, input-only **Stop Yapping Mic**. While Vowen records, the feed goes silent and the queued audio is thrown away.
 
+A gentle noise gate learns the background hiss level and lowers it by about 20 dB while you’re silent. You can turn it off from **Reduce background hiss** in the menu.
+
+## Reliability and logs
+
+The app runs as a launchd agent (`Contents/Library/LaunchAgents/com.stopyapping.app.agent.plist`), registered on first launch. It opens at login, and launchd restarts it a few seconds after a crash. Quitting from the menu is a clean exit, so it stays closed until the next login.
+
+Everything worth knowing goes to `~/Library/Logs/Stop Yapping/StopYapping.log`: starts and stops with the reason, audio route changes and errors, Vowen state changes, sleep and wake. A crash writes the signal and a backtrace there before macOS writes its own report. **Show log** in the menu opens the folder.
+
 Run the built-in checks with:
 
 ```bash

@@ -9,18 +9,21 @@ struct Preferences {
     var microphoneUID: String?
     var delayMs: Int
     var paused: Bool
+    var reduceNoise: Bool
 
     static func load() -> Preferences {
         let saved = store.object(forKey: "DelayMs") as? Int ?? 180
         return Preferences(microphoneUID: store.string(forKey: "MicrophoneUID"),
                            delayMs: min(500, max(60, saved)),
-                           paused: store.bool(forKey: "Paused"))
+                           paused: store.bool(forKey: "Paused"),
+                           reduceNoise: store.object(forKey: "ReduceNoise") as? Bool ?? true)
     }
 
     func save() {
         Preferences.store.set(microphoneUID, forKey: "MicrophoneUID")
         Preferences.store.set(delayMs, forKey: "DelayMs")
         Preferences.store.set(paused, forKey: "Paused")
+        Preferences.store.set(reduceNoise, forKey: "ReduceNoise")
     }
 }
 
@@ -42,9 +45,13 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let pauseItem = NSMenuItem(title: "", action: #selector(togglePause), keyEquivalent: "")
     private let microphoneMenu = NSMenu()
     private let delayMenu = NSMenu()
+    private let noiseItem = NSMenuItem(title: "Reduce background hiss", action: #selector(toggleNoise), keyEquivalent: "")
     private let loginItem = NSMenuItem(title: "Open at login", action: #selector(toggleLogin), keyEquivalent: "")
     private var timer: Timer?
     private var lastIcon: String?
+    private var lastLoggedVowen: VowenState?
+    private var lastAudioStatus = ""
+    private var quitRequestedFromMenu = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -57,12 +64,42 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
                         shouldStop: { self?.isStopping ?? true })
         }
         timer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: true) { [weak self] _ in self?.refresh() }
+        RunLoop.main.add(timer!, forMode: .common)   // keep running while the menu is open
         refresh()
+
+        let workspace = NSWorkspace.shared.notificationCenter
+        workspace.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { _ in
+            Log.write("Mac going to sleep")
+        }
+        workspace.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
+            Log.write("Mac woke up, rebuilding the audio route")
+            self?.restartRoute()
+        }
+        workspace.addObserver(forName: NSWorkspace.willPowerOffNotification, object: nil, queue: .main) { _ in
+            Log.write("Logging out or shutting down")
+        }
+        LoginService.setUpOnFirstLaunch()
+    }
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        Log.write(quitRequestedFromMenu ? "Quit from the menu" : "Asked to quit by macOS or another app")
+        return .terminateNow
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         stateLock.lock(); stopping = true; stateLock.unlock()
         stopRoute()
+        Log.write("Stopped")
+    }
+
+    func prepareForHandOff() {
+        stateLock.lock(); stopping = true; stateLock.unlock()
+        stopRoute()
+    }
+
+    @objc private func quitFromMenu() {
+        quitRequestedFromMenu = true
+        NSApp.terminate(nil)
     }
 
     private var isStopping: Bool { stateLock.lock(); defer { stateLock.unlock() }; return stopping }
@@ -75,6 +112,10 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
         stateLock.lock(); defer { stateLock.unlock() }
         vowen = state
         route?.buffer.setBlocked(shouldMute)
+        if state != lastLoggedVowen {
+            lastLoggedVowen = state
+            Log.write("Vowen \(state)")
+        }
     }
 
     private func refresh() {
@@ -94,6 +135,11 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let muted = route != nil && shouldMute
         let paused = preferences.paused
         stateLock.unlock()
+
+        if route == nil, audioStatus != lastAudioStatus {
+            lastAudioStatus = audioStatus
+            Log.write("Status: \(audioStatus)")
+        }
 
         statusLine.title = label
         statusLine.isHidden = label.isEmpty
@@ -138,12 +184,15 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return
         }
         do {
-            let candidate = try AudioRoute(input: input, delayMs: preferences.delayMs, initiallyMuted: true)
+            let candidate = try AudioRoute(input: input, delayMs: preferences.delayMs, initiallyMuted: true,
+                                           reduceNoise: preferences.reduceNoise)
             stateLock.lock()
             candidate.buffer.setBlocked(shouldMute)
             route = candidate
             stateLock.unlock()
             try candidate.start()
+            lastAudioStatus = ""
+            Log.write("Audio route started: \(input.name) at \(Int(candidate.inputRate)) Hz → Stop Yapping Mic at \(Int(candidate.outputRate)) Hz, \(preferences.delayMs) ms delay, hiss reduction \(preferences.reduceNoise ? "on" : "off")")
         } catch {
             routeError(error.localizedDescription)
             stopRoute()
@@ -152,7 +201,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func routeError(_ message: String) {
         audioStatus = "Audio unavailable · Retrying"
-        NSLog("Stop Yapping: %@", message)
+        Log.write("Audio error: \(message)")
         nextAttempt = Date().addingTimeInterval(2)
     }
 
@@ -193,6 +242,8 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let delayItem = NSMenuItem(title: "First-word protection", action: nil, keyEquivalent: "")
         delayItem.submenu = delayMenu
         menu.addItem(delayItem)
+        noiseItem.target = self
+        menu.addItem(noiseItem)
         loginItem.target = self
         menu.addItem(loginItem)
         menu.addItem(.separator())
@@ -203,8 +254,13 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let uninstall = NSMenuItem(title: "Uninstall Stop Yapping…", action: #selector(uninstall), keyEquivalent: "")
         uninstall.target = self
         menu.addItem(uninstall)
+        let logs = NSMenuItem(title: "Show log", action: #selector(showLog), keyEquivalent: "")
+        logs.target = self
+        menu.addItem(logs)
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit Stop Yapping", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        let quit = NSMenuItem(title: "Quit Stop Yapping", action: #selector(quitFromMenu), keyEquivalent: "q")
+        quit.target = self
+        menu.addItem(quit)
     }
 
     func menuWillOpen(_ menu: NSMenu) {
@@ -242,20 +298,29 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
             delayMenu.addItem(item)
         }
 
-        loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
+        loginItem.state = LoginService.isEnabled ? .on : .off
+        noiseItem.state = preferences.reduceNoise ? .on : .off
     }
 
     @objc private func togglePause() {
         stateLock.lock()
         preferences.paused.toggle()
         route?.buffer.setBlocked(shouldMute)
+        let paused = preferences.paused
         stateLock.unlock()
+        Log.write(paused ? "Automatic muting paused" : "Automatic muting resumed")
         preferences.save()
         refresh()
     }
 
     @objc private func chooseMicrophone(_ sender: NSMenuItem) {
         stateLock.lock(); preferences.microphoneUID = sender.representedObject as? String; stateLock.unlock()
+        preferences.save()
+        restartRoute()
+    }
+
+    @objc private func toggleNoise() {
+        stateLock.lock(); preferences.reduceNoise.toggle(); stateLock.unlock()
         preferences.save()
         restartRoute()
     }
@@ -268,11 +333,15 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func toggleLogin() {
         do {
-            if SMAppService.mainApp.status == .enabled { try SMAppService.mainApp.unregister() }
-            else { try SMAppService.mainApp.register() }
+            try LoginService.setEnabled(!LoginService.isEnabled)
         } catch {
+            Log.write("Login setting failed: \(error.localizedDescription)")
             showAlert("Could not change the login setting", error.localizedDescription)
         }
+    }
+
+    @objc private func showLog() {
+        NSWorkspace.shared.activateFileViewerSelecting([Log.file])
     }
 
     @objc private func showHelp() {
@@ -295,13 +364,14 @@ final class AppController: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NSApp.activate(ignoringOtherApps: true)
         guard confirm.runModal() == .alertFirstButtonReturn else { return }
 
-        try? SMAppService.mainApp.unregister()
+        Log.write("Uninstalling")
         let appPath = Bundle.main.bundlePath.replacingOccurrences(of: "'", with: "'\\''")
         let shell = """
         rm -rf '/Library/Audio/Plug-Ins/HAL/StopYapping.driver' '\(appPath)'; \
         pkgutil --forget com.stopyapping.app >/dev/null 2>&1; \
         pkgutil --forget com.stopyapping.driver >/dev/null 2>&1; \
-        launchctl kickstart -k system/com.apple.audio.coreaudiod >/dev/null 2>&1 || killall coreaudiod
+        (launchctl kickstart -k system/com.apple.audio.coreaudiod >/dev/null 2>&1 || killall coreaudiod); \
+        launchctl bootout gui/\(getuid())/\(LoginService.label) >/dev/null 2>&1; true
         """
         let escaped = shell.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
         var error: NSDictionary?
