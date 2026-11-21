@@ -8,8 +8,8 @@ Stop Yapping mutes your call mic while you dictate with Vowen and brings it back
 
 ## 📦 Can I download it?
 
-- **Windows** · Download the [Windows 11 installer](../../releases/tag/v0.2.1). It includes the audio driver in the same download. This preview is unsigned, so Windows may display an unknown publisher warning.
-- **Mac** · Download the [macOS installer](../../releases/tag/v0.3.0-mac). It includes the Stop Yapping Mic virtual microphone in the same download. See [Set it up on a Mac](#-set-it-up-on-a-mac).
+- **Windows** · [⬇️ Download for Windows 11](https://github.com/MathiFX/stop-yapping/releases/download/v0.2.1/StopYapping-Setup-x64.exe) ([release notes](../../releases/tag/v0.2.1)). It includes the audio driver in the same download. This preview is unsigned, so Windows may display an unknown publisher warning.
+- **Mac** · [⬇️ Download for Mac](https://github.com/MathiFX/stop-yapping/releases/download/v0.3.0-mac/StopYapping-0.3.0-macOS.pkg) ([release notes](../../releases/tag/v0.3.0-mac)). It includes the Stop Yapping Mic virtual microphone in the same download. See [Set it up on a Mac](#-set-it-up-on-a-mac).
 
 ## 🎧 Set it up on Windows
 
